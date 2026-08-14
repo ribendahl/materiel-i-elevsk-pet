@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔬 Materiel i kemisalen</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#eef5ff;text-align:center;padding:20px;margin:0;color:#222}
+h1{color:#004080;margin-bottom:8px}
+.subtitle{margin-top:0;color:#555}
+#game{max-width:850px;margin:auto;background:white;padding:25px;border-radius:18px;box-shadow:0 0 12px rgba(0,0,0,.18)}
+#top{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.stat{background:#f3f7fb;padding:10px 16px;border-radius:10px;font-weight:bold;color:#004080}
+#level{margin:8px 0;color:#004080}
+#score,#highscore{font-size:20px;font-weight:bold;margin:7px}
+#highscore{color:#b8860b}
+#progressBox{margin:18px auto;max-width:600px}
+#progressText{font-weight:bold;margin-bottom:8px}
+.progressBar{width:100%;height:18px;background:#e0e0e0;border-radius:10px;overflow:hidden}
+#progressFill{height:100%;width:0%;background:#0078d7;transition:width .4s ease}
+#ladder{text-align:left;margin:20px auto;max-width:470px;background:#f7f7f7;padding:14px;border-radius:12px}
+.levelStep{position:relative;padding:9px 10px 9px 48px;margin:3px 0;border-radius:7px;color:#777}
+.levelStep.current{background:gold;color:#000;font-weight:bold}
+.levelStep.completed{color:#228b22;font-weight:bold}
+.levelStep.locked{color:#999}
+.levelArrow{position:absolute;left:12px;font-size:20px}
+.levelConnector{margin-left:23px;border-left:3px solid #ccc;height:7px}
+#question{margin-top:25px;min-height:40px}
+#questionType{font-size:14px;color:#777;font-weight:bold;margin-bottom:8px}
+#imageArea{min-height:210px;display:flex;justify-content:center;align-items:center;margin:12px auto}
+#questionImage{max-width:300px;max-height:210px;object-fit:contain;border:2px solid #ddd;border-radius:12px;padding:10px;background:white}
+#answers{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:15px}
+.answerButton{padding:12px 18px;margin:0;cursor:pointer;border:none;background:#0078d7;color:white;border-radius:9px;font-size:16px;min-width:220px}
+.answerButton:hover{background:#005ea6}
+.correct{color:green;font-weight:bold}
+.wrong{color:red;font-weight:bold}
+#feedback{min-height:28px;font-size:18px}
+#nextButton{display:none;background:#228b22}
+#restartButton{display:none;background:#004080}
+.medal{font-size:60px}
+.small{font-size:13px;color:#666}
+</style>
+</head>
+<body>
+<h1>🔬 Materiel i kemisalen</h1>
+<p class="subtitle">Känn igen materielen och lär dig vad den används till!</p>
+<div id="game">
+<div id="top"><div class="stat" id="questionCounter">Fråga 1</div><div class="stat" id="typeCounter">Blandad frågetyp</div></div>
+<h2 id="level">Nivå 0</h2>
+<div id="score">Poäng: 0</div>
+<div id="highscore">🏆 Rekord: 0</div>
+<div id="progressBox"><div id="progressText">0 av 10 nivåer avklarade</div><div class="progressBar"><div id="progressFill"></div></div></div>
+<div id="ladder"></div>
+<div id="questionType"></div>
+<div id="imageArea"></div>
+<h3 id="question"></h3>
+<div id="answers"></div>
+<p id="feedback"></p>
+<button type="button" id="nextButton" class="nextButton">Nästa fråga</button>
+<button type="button" id="restartButton" class="answerButton">Spela igen</button>
+<p id="error" class="wrong" style="display:none"></p>
+</div>
+<script>
+const levels=["🔬 Start", "🧪 Nybörjare", "🧫 Laborationsassistent", "🔍 Laborant", "🦺 Säkerhetskunnig", "🔥 Brännarspecialist", "🥽 Materielkännare", "⚗️ Laborationsproffs", "📚 Laborationsexpert", "⭐ Kemisalsmästare", "🏆 Kemimästare"];
+const questions=[{"type": "mc", "q": "Vad används en brännare till?", "options": ["Mäta volym av vätskor", "Värma vätskor och fasta ämnen", "Rengöra provrör", "Hålla fast provrör"], "answer": "Värma vätskor och fasta ämnen", "img": null}, {"type": "mc", "q": "Vilket är ett användningsområde för en bägare?", "options": ["Värma, blanda och förvara vätskor och fasta ämnen", "Fästa provrör i ett stativ", "Mäta volym exakt i ögonhöjd", "Hålla varma deglar"], "answer": "Värma, blanda och förvara vätskor och fasta ämnen", "img": null}, {"type": "mc", "q": "Vad använder man en degeltång till?", "options": ["Röra om vätskor", "Hålla provrör under uppvärmning", "Hantera varma deglar, degellock och andra varma föremål", "Filtrera vätskor"], "answer": "Hantera varma deglar, degellock och andra varma föremål", "img": null}, {"type": "mc", "q": "Vad kan en E-kolv användas till?", "options": ["Värma, blanda, förvara och förflytta vätskor", "Rengöra provrör", "Hålla filterpapper vid filtrering", "Mäta volym av vätskor"], "answer": "Värma, blanda, förvara och förflytta vätskor", "img": null}, {"type": "mc", "q": "Vad används en glasstav bland annat till?", "options": ["Hålla provrör under uppvärmning", "Röra om vätska och hjälpa till att hälla vätskor", "Väga fasta ämnen", "Fästa en klämma till ett stativ"], "answer": "Röra om vätska och hjälpa till att hälla vätskor", "img": null}, {"type": "mc", "q": "Vad används en klämma till?", "options": ["Fästa provrör till stativ", "Mäta vätskors volym", "Rengöra provrör", "Värma fasta ämnen"], "answer": "Fästa provrör till stativ", "img": null}, {"type": "mc", "q": "Vad används en muff till?", "options": ["Fästa en klämma till stativ", "Hålla provrör under uppvärmning", "Skydda ögonen", "Hälla vätska till kärl med liten öppning"], "answer": "Fästa en klämma till stativ", "img": null}, {"type": "mc", "q": "Vad använder man ett mätglas till?", "options": ["Mäta volym av vätskor", "Värma fasta ämnen", "Hålla fast ett provrör", "Förvara små mängder fasta ämnen"], "answer": "Mäta volym av vätskor", "img": null}, {"type": "mc", "q": "Vad används ett nät till vid uppvärmning?", "options": ["Som underlag för bägare eller E-kolv ovanpå trefoten", "För att hålla provrör upprätt", "För att rengöra provrör", "För att hålla fast en klämma"], "answer": "Som underlag för bägare eller E-kolv ovanpå trefoten", "img": null}, {"type": "mc", "q": "Vad används ett provrör till?", "options": ["Mäta volym exakt", "Förvara kemikalier för observation, uppvärmning eller blandning", "Hålla varma deglar", "Filtrera vätskor"], "answer": "Förvara kemikalier för observation, uppvärmning eller blandning", "img": null}, {"type": "mc", "q": "Vad används en provrörsborste till?", "options": ["Rengöra provrör, E-kolvar och mätglas", "Röra om vätskor", "Hålla provrör under uppvärmning", "Mäta vätskors volym"], "answer": "Rengöra provrör, E-kolvar och mätglas", "img": null}, {"type": "mc", "q": "Vad används en provrörshållare till?", "options": ["Organisera provrör", "Hålla provrör under uppvärmning", "Hålla filterpapper", "Mäta vätskor"], "answer": "Hålla provrör under uppvärmning", "img": null}, {"type": "mc", "q": "Vad används ett provrörsställ till?", "options": ["Värma provrör", "Organisera och ställa provrör upprätt", "Rengöra provrör", "Fästa provrör vid stativ"], "answer": "Organisera och ställa provrör upprätt", "img": null}, {"type": "mc", "q": "Vad används en sked till i kemisalen?", "options": ["Föra över fasta ämnen mellan kärl", "Mäta vätskevolym", "Hålla varma föremål", "Röra om vätskor"], "answer": "Föra över fasta ämnen mellan kärl", "img": null}, {"type": "mc", "q": "Varför använder man skyddsglasögon?", "options": ["Se vätskenivån bättre", "Skydda ögonen från skadliga ämnen", "Skydda händerna från värme", "Arbeta närmare brännaren"], "answer": "Skydda ögonen från skadliga ämnen", "img": null}, {"type": "mc", "q": "Vad används ett stativ till?", "options": ["Hålla upp och stabilisera exempelvis provrör och tratt", "Mäta vätskevolym", "Rengöra glasutrustning", "Värma vätskor"], "answer": "Hålla upp och stabilisera exempelvis provrör och tratt", "img": null}, {"type": "mc", "q": "Vad används en tratt till?", "options": ["Hålla provrör under uppvärmning", "Hälla vätska till kärl med liten öppning och hålla filterpapper vid filtrering", "Mäta volym", "Hantera varma deglar"], "answer": "Hälla vätska till kärl med liten öppning och hålla filterpapper vid filtrering", "img": null}, {"type": "mc", "q": "Vad används en trefot till?", "options": ["Som underlag för nät eller triangel vid uppvärmning med brännare", "Mäta vätskor", "Rengöra provrör", "Förvara kemikalier"], "answer": "Som underlag för nät eller triangel vid uppvärmning med brännare", "img": null}, {"type": "mc", "q": "Vad används ett urglas till?", "options": ["Förvara små mängder fasta ämnen vid vägning eller undersökning", "Hålla provrör under uppvärmning", "Mäta vätskevolym", "Fästa utrustning på stativ"], "answer": "Förvara små mängder fasta ämnen vid vägning eller undersökning", "img": null}, {"type": "mc", "q": "Vilken utrustning används för att mäta volym av vätskor?", "options": ["Mätglas", "Tratt", "Provrörsställ", "Degeltång"], "answer": "Mätglas", "img": null}, {"type": "mc", "q": "Vilken utrustning används för att hålla provrör under uppvärmning?", "options": ["Provrörsställ", "Provrörshållare", "Stativ", "Klämma"], "answer": "Provrörshållare", "img": null}, {"type": "mc", "q": "Vilken utrustning används för att rengöra provrör, E-kolvar och mätglas?", "options": ["Glasstav", "Sked", "Provrörsborste", "Tratt"], "answer": "Provrörsborste", "img": null}, {"type": "mc", "q": "Vilken utrustning används för att fästa en klämma till ett stativ?", "options": ["Muff", "Trefot", "Nät", "Provrörsställ"], "answer": "Muff", "img": null}, {"type": "mc", "q": "Vilken utrustning används för att föra över fasta ämnen mellan kärl?", "options": ["Bägare", "Sked", "Glasstav", "Urglas"], "answer": "Sked", "img": null}, {"type": "mc", "q": "Vilken utrustning används för att skydda ögonen från skadliga ämnen?", "options": ["Provrörshållare", "Skyddsglasögon", "Degeltång", "Stativ"], "answer": "Skyddsglasögon", "img": null}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Brännare", "Mätglas", "Bägare", "E-kolv"], "answer": "Brännare", "img": "brannare"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Bägare", "E-kolv", "Provrör", "Urglas"], "answer": "Bägare", "img": "bagare"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Degeltång", "Provrörshållare", "Klämma", "Sked"], "answer": "Degeltång", "img": "degeltang"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["E-kolv", "Bägare", "Provrör", "Mätglas"], "answer": "E-kolv", "img": "e_kolv"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Glasstav", "Sked", "Provrörsborste", "Tratt"], "answer": "Glasstav", "img": "glasstav"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Klämma", "Muff", "Provrörshållare", "Stativ"], "answer": "Klämma", "img": "klamma"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Muff", "Klämma", "Stativ", "Trefot"], "answer": "Muff", "img": "muff"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Mätglas", "Provrör", "Bägare", "E-kolv"], "answer": "Mätglas", "img": "matglas"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Nät", "Trefot", "Urglas", "Bägare"], "answer": "Nät", "img": "nat"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Provrör", "Provrörsställ", "Mätglas", "Urglas"], "answer": "Provrör", "img": "provror"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Provrörsborste", "Sked", "Glasstav", "Provrörshållare"], "answer": "Provrörsborste", "img": "provrorsborste"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Provrörshållare", "Provrörsställ", "Klämma", "Degeltång"], "answer": "Provrörshållare", "img": "provrorshallare"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Provrörsställ", "Provrörshållare", "Stativ", "Bägare"], "answer": "Provrörsställ", "img": "provrorsstall"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Sked", "Glasstav", "Provrörsborste", "Degeltång"], "answer": "Sked", "img": "sked"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Skyddsglasögon", "Provrörshållare", "Degeltång", "Sked"], "answer": "Skyddsglasögon", "img": "skyddsglasogon"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Stativ", "Trefot", "Muff", "Klämma"], "answer": "Stativ", "img": "stativ"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Tratt", "Mätglas", "Glasstav", "Provrör"], "answer": "Tratt", "img": "tratt"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Trefot", "Nät", "Stativ", "Provrörsställ"], "answer": "Trefot", "img": "trefot"}, {"type": "image", "q": "Vad heter materielen på bilden?", "options": ["Urglas", "Bägare", "Nät", "Provrör"], "answer": "Urglas", "img": "urglas"}];
+let level=0,score=0,currentQuestion=null,questionNumber=0,answered=false;
+let remainingQuestions=[...questions];
+let highscore=0;
+try{highscore=Number(localStorage.getItem('materielHighscore'))||0}catch(e){highscore=0}
+const extensions={brannare:'.jpeg',stativ:'.jpeg',muff:'.jpeg',degeltang:'.png',trefot:'.jpeg',bagare:'.jpeg',provror:'.jpeg',provrorsborste:'.png',matglas:'.jpeg',nat:'.png',e_kolv:'.jpeg',provrorsstall:'.png',urglas:'.png',sked:'.png',provrorshallare:'.png',tratt:'.jpeg',glasstav:'.png',klamma:'.png',skyddsglasogon:'.png'};
+const imgPath=name=>`bilder/${name}${extensions[name]}`;
+function getRandomQuestion(){if(!remainingQuestions.length) remainingQuestions=[...questions];const i=Math.floor(Math.random()*remainingQuestions.length);return remainingQuestions.splice(i,1)[0]}
+function shuffle(arr){return [...arr].sort(()=>Math.random()-.5)}
+function showQuestion(){
+ answered=false; currentQuestion=getRandomQuestion(); questionNumber++;
+ document.getElementById('questionCounter').textContent='Fråga '+questionNumber;
+ document.getElementById('typeCounter').textContent=currentQuestion.type==='image'?'Bildfråga':'Kunskapsfråga';
+ document.getElementById('questionType').textContent=currentQuestion.type==='image'?'👀 Känn igen materielen':'🧠 Vad kan du om materielen?';
+ const imageArea=document.getElementById('imageArea'); imageArea.innerHTML='';
+ if(currentQuestion.type==='image'){const img=document.createElement('img');img.id='questionImage';img.alt='Bild på laborationsutrustning';img.src=imgPath(currentQuestion.img);img.onerror=()=>{imageArea.innerHTML='<p class="wrong">Bilden kunde inte laddas. Kontrollera att bilderna ligger i mappen <b>bilder</b>.</p>'};imageArea.appendChild(img)}
+ document.getElementById('question').textContent=currentQuestion.q;
+ const answers=document.getElementById('answers');answers.innerHTML='';
+ shuffle(currentQuestion.options).forEach(option=>{const b=document.createElement('button');b.className='answerButton';b.textContent=option;b.onclick=()=>checkAnswer(option);answers.appendChild(b)});
+ document.getElementById('feedback').innerHTML='';const nextButton=document.getElementById('nextButton');nextButton.style.display='none';nextButton.disabled=false;updateDisplay();
+}
+function checkAnswer(answer){if(answered)return;answered=true;const correct=answer===currentQuestion.answer;document.querySelectorAll('#answers .answerButton').forEach(b=>b.disabled=true);
+ if(correct){level++;score+=10;document.getElementById('feedback').innerHTML='<span class="correct">✅ Rätt! +10 poäng!</span>';if(score>highscore){highscore=score;try{localStorage.setItem('materielHighscore',highscore)}catch(e){}}
+   if(level>=10){finishGame();return}
+ }else{level=0;score=0;document.getElementById('feedback').innerHTML='<span class="wrong">💥 Fel svar! Du går tillbaka till nivå 0.</span>'}
+ updateDisplay();document.getElementById('nextButton').style.display='inline-block';
+}
+document.getElementById('nextButton').addEventListener('click',function(){showQuestion();});
+function finishGame(){document.getElementById('questionType').textContent='🏆 Avklarat!';document.getElementById('question').innerHTML='🏆 DU ÄR KEMIMÄSTARE!';document.getElementById('imageArea').innerHTML='<div class="medal">🥇</div>';document.getElementById('answers').innerHTML='<h2>Fantastiskt jobbat!</h2><p>Du klarade 10 nivåer och fick <strong>'+score+' poäng</strong>.</p><p class="small">Nu känner du igen materielen och vet vad den används till.</p>';document.getElementById('feedback').innerHTML='';document.getElementById('nextButton').style.display='none';document.getElementById('restartButton').style.display='inline-block';updateDisplay()}
+document.getElementById('restartButton').onclick=()=>location.reload();
+function updateDisplay(){document.getElementById('level').textContent='Nivå '+level;document.getElementById('score').textContent='Poäng: '+score;document.getElementById('highscore').textContent='🏆 Rekord: '+highscore;document.getElementById('progressFill').style.width=Math.min(level/10*100,100)+'%';document.getElementById('progressText').textContent=level+' av 10 nivåer avklarade';let h='';for(let i=10;i>=0;i--){let state=i===level?'current':i<level?'completed':'locked';let arrow=i===level?'👉':i<level?'✓':'🔒';h+=`<div class="levelStep ${state}"><span class="levelArrow">${arrow}</span>${levels[i]}</div>`;if(i>0)h+='<div class="levelConnector"></div>'}document.getElementById('ladder').innerHTML=h}
+window.addEventListener('error',e=>{const box=document.getElementById('error');box.style.display='block';box.textContent='JavaScript-fel: '+e.message});
+try{showQuestion()}catch(e){const box=document.getElementById('error');box.style.display='block';box.textContent='Spelet kunde inte starta: '+e.message;console.error(e)}
+</script>
+</body>
+</html>
